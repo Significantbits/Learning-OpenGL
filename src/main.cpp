@@ -1,5 +1,6 @@
 #include "graphics.h"
 #include "triangle_shaders.h"
+#include "compile_shaders.h"
 #include <iostream>
 
 
@@ -16,7 +17,22 @@
 float vertices[] = {
 	-0.5f, -0.5f, 0.0f,
 	0.5f, -0.5f, 0.0f,
+	0.0f, 0.5f, 0.0f,
+	-0.9f, -0.5f, 0.0f,
+	-0.6f, -0.5f, 0.0f,
+	-0.75f, 0.5f, 0.0f,
+};
+
+float tri_vertices1[] = {
+	-0.5f, -0.5f, 0.0f,
+	0.5f, -0.5f, 0.0f,
 	0.0f, 0.5f, 0.0f
+};
+
+float tri_vertices2[] = {
+	-0.9f, -0.5f, 0.0f,
+	-0.6f, -0.5f, 0.0f,
+	-0.75f, 0.5f, 0.0f,
 };
 
 // Draw a rectangle with two triangles
@@ -80,99 +96,49 @@ int main(int argc, char** argv)
 	glfwSetFramebufferSizeCallback(window,framebuffer_size_callback);
 
 	// Use wireframe mode
-	glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 	// Set back to normal mode
-	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
-	// Create VAO
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glGenVertexArrays(1, &VAO);
+	// Create VAOs
+	unsigned int VAO1;
+	glGenVertexArrays(1, &VAO1);
+
+	unsigned int VAO2;
+	glGenVertexArrays(1, &VAO2);
 
 
 	// Bind a VAO to use it to store the VBO attributes
-	glBindVertexArray(VAO);
+	glBindVertexArray(VAO1);
 
 	// Need to declare memory on the GPU to store the vertices (vertex buffer objects)
-	unsigned int VBO;
-	glGenBuffers(1,&VBO); // This gives us 1 buffer, and the ID of the buffer is stored in VBO
+	unsigned int VBO1;
+	glGenBuffers(1,&VBO1); // This gives us 1 buffer, and the ID of the buffer is stored in VBO
 
 	// Bind the buffer
-	glBindBuffer(GL_ARRAY_BUFFER,VBO); // GL_ARRAY_BUFFER is the vertex buffer object type
+	glBindBuffer(GL_ARRAY_BUFFER,VBO1); // GL_ARRAY_BUFFER is the vertex buffer object type
 
 	// Binding makes all calls to GL_ARRAY_BUFFER go to the VBO.
 	// Copy the data over to the GPU.
-	glBufferData(GL_ARRAY_BUFFER,sizeof(better_rect_vertices),better_rect_vertices,GL_STATIC_DRAW); // GL_STATIC_DRAW - the data is set only once and used many times. GL_STATIC_DRAW will place the data in GPU memory that has fast reads but slow writes. GL_DYNAMIC_DRAW focuses on fast writes.
+	glBufferData(GL_ARRAY_BUFFER,sizeof(tri_vertices1),tri_vertices1,GL_STATIC_DRAW); // GL_STATIC_DRAW - the data is set only once and used many times. GL_STATIC_DRAW will place the data in GPU memory that has fast reads but slow writes. GL_DYNAMIC_DRAW focuses on fast writes.
 
-	// Create EBO for rectangle
-	unsigned int EBO;
-	glGenBuffers(1,&EBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3* sizeof(float),(void*)0);
+	// 0 is the attribute location
+	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(indices),indices,GL_STATIC_DRAW);
-	// Need to create a vertex and fragment shader to start processing the data we just copied over. The shader must be written in the shader language GLSL (OpenGL Shading Language).
-	// See shader in triangle_shaders.h file
+	// Bind a VAO to use it to store the VBO attributes for second triangle
+	glBindVertexArray(VAO2);
 
-	// Compile the shader. OpenGL compiles it dynamically at run-time. We need to create a shader object.
-	unsigned vertexShader;
-	// In this case it is a vertex shader since we are drawing a triangle.
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	// VBO for second triangle
+	unsigned int VBO2;
+	glGenBuffers(1,&VBO2); // This gives us 1 buffer, and the ID of the buffer is stored in VBO
 
-	// Attach source code to shader object.
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
 
-	// Shader compile error checking
-	int success;
-	char infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	// Bind the buffer for second triangle
+	glBindBuffer(GL_ARRAY_BUFFER,VBO2); // GL_ARRAY_BUFFER is the vertex buffer object type
 
-	if(!success)
-	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << "\n";
-	}
-
-	// Next we need to create the fragment shader. Source is in triangle_shaders.h.
-	unsigned int fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-	
-	// Check for compile errors
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if(!success)
-	{
-		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << "\n";
-	}
-
-	// Now we need to link both shaders into a shader program
-	// And activate the program when rendering objects
-
-	// Create a program object
-	unsigned int shaderProgram;
-	shaderProgram = glCreateProgram();
-
-	// Attach shaders to program
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	// Check for errors in linking program
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if(!success)
-	{
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << "\n";
-	}
-
-	// Tell opengl to use the program
-	glUseProgram(shaderProgram);
-
-	// Delete shader objects after linking
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	// Copy the data over to the GPU for second triangle
+	glBufferData(GL_ARRAY_BUFFER,sizeof(tri_vertices2),tri_vertices2,GL_STATIC_DRAW); // GL_STATIC_DRAW - the data is set only once and used many times. GL_STATIC_DRAW will place the data in GPU memory that has fast reads but slow writes. GL_DYNAMIC_DRAW focuses on fast writes.
 
 	// We still need to tell OpenGL how to interpret the vertex data and how it should connect the data to the vertex shader attributes
 
@@ -189,6 +155,30 @@ int main(int argc, char** argv)
 	// 0 is the attribute location
 	glEnableVertexAttribArray(0);
 
+
+	// Create EBO for rectangle
+	unsigned int EBO;
+	glGenBuffers(1,&EBO);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(indices),indices,GL_STATIC_DRAW);
+	// Need to create a vertex and fragment shader to start processing the data we just copied over. The shader must be written in the shader language GLSL (OpenGL Shading Language).
+	// See shader in triangle_shaders.h file
+	unsigned int vertexShader = compile_shaders(vertexShaderSource,0);
+	unsigned int fragmentShaderRed = compile_shaders(fragmentShaderSourceRed,1);
+	unsigned int fragmentShaderYellow = compile_shaders(fragmentShaderSourceYellow,1);
+
+	// Now we need to link both shaders into a shader program
+	// And activate the program when rendering objects
+	unsigned int shaderProgramRed = link_shaders(2,vertexShader,fragmentShaderRed);
+	unsigned int shaderProgramYellow = link_shaders(2,vertexShader,fragmentShaderYellow);
+
+	// Delete shader objects after linking
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShaderRed);
+	glDeleteShader(fragmentShaderYellow);
+
+
 	// Switching between all this every time you want to switch buffers is cumbersome.
 	// Luckily there is a way in OpenGL to save the state for the bind and just switch buffer binds using Vertex Array Objects.
 	// So, the attributes are saved in the VAO, and whenever we want to draw the object we simply bind that VAO
@@ -198,7 +188,8 @@ int main(int argc, char** argv)
 
 
 	// Bind EBO buffer
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+	// Bind a VAO to use it to store the VBO attributes for second triangle
 
 
 	// Render loop
@@ -212,10 +203,21 @@ int main(int argc, char** argv)
 		glClearColor(0.2f,0.3f,0.3f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		// Tell opengl to use the program
+		glUseProgram(shaderProgramRed);
+
 		// Draw Triangle
-		//glDrawArrays(GL_TRIANGLES,0,3); // 0 index of vertex array we want to draw, 3 is how many vertices our object is.
+		glBindVertexArray(VAO1);
+		glDrawArrays(GL_TRIANGLES,0,3); // 0 index of vertex array we want to draw, 3 is how many vertices our object is.
+
+		// Tell opengl to use the program
+		glUseProgram(shaderProgramYellow);
+
+		// For second triangle
+		glBindVertexArray(VAO2);
+		glDrawArrays(GL_TRIANGLES,0,3); // 0 index of vertex array we want to draw, 3 is how many vertices our object is.
 		// Draw rectangle
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,0);
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,0);
 
 		// Check and call events and swap the frame buffers
 		glfwSwapBuffers(window);

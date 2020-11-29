@@ -2,6 +2,7 @@
 #include "triangle_shaders.h"
 #include "compile_shaders.h"
 #include <iostream>
+#include <math.h>
 
 
 // TODO: Clean up code and try the exercies at the end of this chapter: 
@@ -168,8 +169,8 @@ int main(int argc, char** argv)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(indices),indices,GL_STATIC_DRAW);
 	// Need to create a vertex and fragment shader to start processing the data we just copied over. The shader must be written in the shader language GLSL (OpenGL Shading Language).
 	// See shader in triangle_shaders.h file
-	unsigned int vertexShader = compile_shaders(vertexCShaderSource,0);
-	unsigned int fragmentShader = compile_shaders(fragmentShaderNCSource,1);
+	unsigned int vertexShader = compile_shaders(vertexShaderSource,0);
+	unsigned int fragmentShader = compile_shaders(fragmentUniformShaderSource,1);
 	//unsigned int fragmentShaderRed = compile_shaders(fragmentShaderSourceRed,1);
 	//unsigned int fragmentShaderYellow = compile_shaders(fragmentShaderSourceYellow,1);
 
@@ -178,6 +179,11 @@ int main(int argc, char** argv)
 	//unsigned int shaderProgramRed = link_shaders(2,vertexShader,fragmentShaderRed);
 	//unsigned int shaderProgramYellow = link_shaders(2,vertexShader,fragmentShaderYellow);
 	unsigned int shaderProgram = link_shaders(2,vertexShader,fragmentShader);
+
+
+	// Tell opengl to use the program
+	glUseProgram(shaderProgram);
+
 
 	// Delete shader objects after linking
 	glDeleteShader(vertexShader);
@@ -198,8 +204,12 @@ int main(int argc, char** argv)
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
 	// Bind a VAO to use it to store the VBO attributes for second triangle
 
-	// Tell opengl to use the program
-	glUseProgram(shaderProgram);
+	// UNIFORMS: here is where we set the uniform value. We need to do this after compiling and linking the shader program
+	// This function also changes the color overtime
+	float timevalue;
+	float greenvalue;
+	int vertexColorLocation;
+
 
 
 	// Render loop
@@ -212,6 +222,14 @@ int main(int argc, char** argv)
 		// ...
 		glClearColor(0.2f,0.3f,0.3f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		// Function to change uniform value overtime
+		timevalue = glfwGetTime();
+		greenvalue = (sin(timevalue) / 2.0f)  + 0.5f;
+		vertexColorLocation = glGetUniformLocation(shaderProgram,"Color");
+
+		// Set the uniform value
+		glUniform4f(vertexColorLocation,0.0f,greenvalue,0.0f,1.0f);
 
 
 		// Draw Triangle

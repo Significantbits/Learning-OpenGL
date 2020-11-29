@@ -44,3 +44,17 @@ const char *fragmentShaderNCSource = "#version 330 core\n"
 "{\n"
 "	FragColor = vec4(vertexColor);\n"
 "}\n";
+
+// Uniforms are another way to pass data to shaders
+// They are global and can be accessed by any shader
+// Uniforms keep their value until reset or updated
+// Lets use a uniform to set the color in the fragment shader as an example
+// Note: the uniform is empty here. We have to set it to something in the cpu program
+
+const char *fragmentUniformShaderSource = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"uniform vec4 Color;\n"
+"void main ()\n"
+"{\n"
+"	FragColor = vec4(Color);\n"
+"}\n";

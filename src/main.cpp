@@ -95,6 +95,10 @@ int main(int argc, char** argv)
 	// Register viewport resize callback when window resizes - Implemented in graphics.h
 	glfwSetFramebufferSizeCallback(window,framebuffer_size_callback);
 
+	int nrAttributes;
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS,&nrAttributes);
+	std::cout << "Number of vertex attributes: " << nrAttributes << "\n";
+
 	// Use wireframe mode
 	//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 	// Set back to normal mode
@@ -164,19 +168,22 @@ int main(int argc, char** argv)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(indices),indices,GL_STATIC_DRAW);
 	// Need to create a vertex and fragment shader to start processing the data we just copied over. The shader must be written in the shader language GLSL (OpenGL Shading Language).
 	// See shader in triangle_shaders.h file
-	unsigned int vertexShader = compile_shaders(vertexShaderSource,0);
-	unsigned int fragmentShaderRed = compile_shaders(fragmentShaderSourceRed,1);
-	unsigned int fragmentShaderYellow = compile_shaders(fragmentShaderSourceYellow,1);
+	unsigned int vertexShader = compile_shaders(vertexCShaderSource,0);
+	unsigned int fragmentShader = compile_shaders(fragmentShaderNCSource,1);
+	//unsigned int fragmentShaderRed = compile_shaders(fragmentShaderSourceRed,1);
+	//unsigned int fragmentShaderYellow = compile_shaders(fragmentShaderSourceYellow,1);
 
 	// Now we need to link both shaders into a shader program
 	// And activate the program when rendering objects
-	unsigned int shaderProgramRed = link_shaders(2,vertexShader,fragmentShaderRed);
-	unsigned int shaderProgramYellow = link_shaders(2,vertexShader,fragmentShaderYellow);
+	//unsigned int shaderProgramRed = link_shaders(2,vertexShader,fragmentShaderRed);
+	//unsigned int shaderProgramYellow = link_shaders(2,vertexShader,fragmentShaderYellow);
+	unsigned int shaderProgram = link_shaders(2,vertexShader,fragmentShader);
 
 	// Delete shader objects after linking
 	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShaderRed);
-	glDeleteShader(fragmentShaderYellow);
+	glDeleteShader(fragmentShader);
+	//glDeleteShader(fragmentShaderRed);
+	//glDeleteShader(fragmentShaderYellow);
 
 
 	// Switching between all this every time you want to switch buffers is cumbersome.
@@ -191,6 +198,9 @@ int main(int argc, char** argv)
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
 	// Bind a VAO to use it to store the VBO attributes for second triangle
 
+	// Tell opengl to use the program
+	glUseProgram(shaderProgram);
+
 
 	// Render loop
 	while(!glfwWindowShouldClose(window))
@@ -203,19 +213,17 @@ int main(int argc, char** argv)
 		glClearColor(0.2f,0.3f,0.3f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Tell opengl to use the program
-		glUseProgram(shaderProgramRed);
 
 		// Draw Triangle
 		glBindVertexArray(VAO1);
 		glDrawArrays(GL_TRIANGLES,0,3); // 0 index of vertex array we want to draw, 3 is how many vertices our object is.
 
 		// Tell opengl to use the program
-		glUseProgram(shaderProgramYellow);
+		glUseProgram(shaderProgram);
 
 		// For second triangle
-		glBindVertexArray(VAO2);
-		glDrawArrays(GL_TRIANGLES,0,3); // 0 index of vertex array we want to draw, 3 is how many vertices our object is.
+		//glBindVertexArray(VAO2);
+		//glDrawArrays(GL_TRIANGLES,0,3); // 0 index of vertex array we want to draw, 3 is how many vertices our object is.
 		// Draw rectangle
 		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,0);
 

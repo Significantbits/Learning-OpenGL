@@ -37,6 +37,16 @@ const char *vertexCShaderSource = "#version 330 core\n"
 "	vertexColor = vec4(0.5,0.0,0.0,1.0);\n"
 "}\n";
 
+const char *vertexCinShaderSource = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n" // Position is the first (location = 0) 3 floats in the array. It must assume one attribute is 3 floats long?
+"layout (location = 1) in vec3 aColor;\n" // Color is the next 3 floats in the array. (location = 1)
+"out vec4 vertexColor;\n"
+"void main()\n"
+"{\n"
+"	gl_Position = vec4(aPos,1.0);\n"
+"	vertexColor = vec4(aColor,1.0);\n"
+"}\n";
+
 const char *fragmentShaderNCSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "in vec4 vertexColor;\n"

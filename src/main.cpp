@@ -24,10 +24,13 @@ float vertices[] = {
 	-0.75f, 0.5f, 0.0f,
 };
 
+// Lets now add color data
+// We also need to change the vertex shader to take in color data
 float tri_vertices1[] = {
-	-0.5f, -0.5f, 0.0f,
-	0.5f, -0.5f, 0.0f,
-	0.0f, 0.5f, 0.0f
+	// Position			// Color
+	-0.5f, -0.5f, 0.0f, 1.0f,0.0f,0.0f, // bottom right
+	0.5f, -0.5f, 0.0f,  0.0f,1.0f,0.0f, // bottom left
+	0.0f, 0.5f, 0.0f,   0.0f,0.0f,1.0f  // top
 };
 
 float tri_vertices2[] = {
@@ -127,9 +130,16 @@ int main(int argc, char** argv)
 	// Copy the data over to the GPU.
 	glBufferData(GL_ARRAY_BUFFER,sizeof(tri_vertices1),tri_vertices1,GL_STATIC_DRAW); // GL_STATIC_DRAW - the data is set only once and used many times. GL_STATIC_DRAW will place the data in GPU memory that has fast reads but slow writes. GL_DYNAMIC_DRAW focuses on fast writes.
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3* sizeof(float),(void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6* sizeof(float),(void*)0);
 	// 0 is the attribute location
 	glEnableVertexAttribArray(0);
+
+	// Need to add another vertex attribute since we added color data to the vertices
+	// 6 * sizeof(float) must be the size of 1 row of the array. 3 vertices, 3 colors.
+	// 3 * sizeof(float) must define the row offset
+	// Remember the GL_FALSE means are the values normalized
+	glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE, 6* sizeof(float),(void*)(3*sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	// Bind a VAO to use it to store the VBO attributes for second triangle
 	glBindVertexArray(VAO2);
@@ -169,8 +179,8 @@ int main(int argc, char** argv)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(indices),indices,GL_STATIC_DRAW);
 	// Need to create a vertex and fragment shader to start processing the data we just copied over. The shader must be written in the shader language GLSL (OpenGL Shading Language).
 	// See shader in triangle_shaders.h file
-	unsigned int vertexShader = compile_shaders(vertexShaderSource,0);
-	unsigned int fragmentShader = compile_shaders(fragmentUniformShaderSource,1);
+	unsigned int vertexShader = compile_shaders(vertexCinShaderSource,0);
+	unsigned int fragmentShader = compile_shaders(fragmentShaderNCSource,1);
 	//unsigned int fragmentShaderRed = compile_shaders(fragmentShaderSourceRed,1);
 	//unsigned int fragmentShaderYellow = compile_shaders(fragmentShaderSourceYellow,1);
 
@@ -206,6 +216,9 @@ int main(int argc, char** argv)
 
 	// UNIFORMS: here is where we set the uniform value. We need to do this after compiling and linking the shader program
 	// This function also changes the color overtime
+	// NOTE: YOU MUST CALL USEPROGRAM ON THE PROGRAM THAT HAS THE UNIFORM IN IT WHEN UPDATING THE VALUE
+	// Uniforms aren't great if you want a color for each vertex. Then you would need to declare as many uniforms as there are vertices in the shape.
+	// The answer to this is to add color data to the vertices array. This way we can store the information in a VBO. Then store the VBO's attributes in a VAO.
 	float timevalue;
 	float greenvalue;
 	int vertexColorLocation;

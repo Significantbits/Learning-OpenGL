@@ -27,6 +27,13 @@ float tri_vertices[] = {
 	0.0f, 0.5f, 0.0f
 };
 
+float inverted_tri_vertices[] = {
+	// Position			
+	-0.5f, 0.5f, 0.0f, 
+	0.5f, 0.5f, 0.0f,
+	0.0f, -0.5f, 0.0f
+};
+
 int main(int argc, char** argv)
 {
 	// Initialize glfw
@@ -73,24 +80,30 @@ int main(int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER,VBO);
 
 	// Copy the data to the GPU
-	glBufferData(GL_ARRAY_BUFFER,sizeof(tri_vertices),tri_vertices,GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER,sizeof(inverted_tri_vertices),inverted_tri_vertices,GL_STATIC_DRAW);
 
 	// Define vertex attributes to tell the shader how the data is laid out
 	glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),(void*)0);
 	glEnableVertexAttribArray(0);
 
 	// Create and compile shader
-	Shader s("./shaders/vertex.vs","./shaders/uniform_fragment.fs");
+	Shader s("./shaders/move_vertex.vs","./shaders/uniform_fragment.fs");
 
 	// Use shader program
 	s.use();
 	s.set4Float("Color",0.5f,0.0f,0.0f,1.0f);
 
+	float x_offset = 0.0f;
+	float y_offset = 0.0f;
+
 	while(!glfwWindowShouldClose(window))
 	{
+		processInput(window,&x_offset,&y_offset);
 		glClearColor(0.2f,0.3f,0.3f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);	
 		glDrawArrays(GL_TRIANGLES,0,3);
+		s.setFloat("x_offset",x_offset);
+		s.setFloat("y_offset",y_offset);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}	
